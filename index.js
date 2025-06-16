@@ -45,6 +45,15 @@ app.post('/register', async (req, res) => {
     res.status(500).send('Error: ' + err.message);
   }
 });
+app.get('/user-details', async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.json(users); 
+  } catch (err) {
+    res.status(500).send('Error: ' + err.message);
+  }
+});
+
 
 app.post('/login',async(req,res)=>{
     const {email, password} = req.body 
