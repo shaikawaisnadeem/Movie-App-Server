@@ -57,7 +57,6 @@ app.post('/login', async (req, res) => {
         return res.status(401).json({ error: 'Not Authorized' });
     }
     const token = jwt.sign({ email: email }, 'test#secret');
-    res.json({ token });
 })
 
 // initializing express app , we should use listen 
