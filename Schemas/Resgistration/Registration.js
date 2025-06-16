@@ -17,6 +17,12 @@ const registrationSchema = new mongoose.Schema({
     minlength: 8,
     trim: true
   },
+  confirmpassword: {
+    type: String,
+    required: true,
+    minlength: 8,
+    trim: true
+  },
   email: {
     type: String,
     required: true,

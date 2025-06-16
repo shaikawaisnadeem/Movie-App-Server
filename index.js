@@ -12,21 +12,20 @@ const app = express()
 mongoConnection()
 middleWares(app)
 
-
 // giving a port number where our server should run 
 const port = 3000 
 
 // defining a simple route 
-app.get('/',(req,res)=>{
+app.get('/', (req, res) => {
     res.send('Welcome to Express Train')
 })
 
 app.post('/register', async (req, res) => {
   try {
-    const { username, password, comfirmpassword, email } = req.body;
+    const { username, password, confirmpassword, email } = req.body;
 
-    if (password !== comfirmpassword) {
-      return res.status(400).send('Password and confirm password do not match.');
+    if (password !== confirmpassword) {
+      return res.status(400).json({ error: 'Password and confirm password do not match.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,42 +33,43 @@ app.post('/register', async (req, res) => {
     const newUser = await User.create({
       username,
       password: hashedPassword,
+      confirmpassword,
       email,
     });
 
     console.log(newUser);
-    res.status(201).send('User created successfully!');
+    res.status(201).json({ message: 'User created successfully!' });
 
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error: ' + err.message);
+    res.status(500).json({ error: err.message });
   }
 });
+
 app.get('/user-details', async (req, res) => {
   try {
     const users = await User.find({});
     res.json(users); 
   } catch (err) {
-    res.status(500).send('Error: ' + err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
-
-app.post('/login',async(req,res)=>{
-    const {email, password} = req.body 
-    const loggedUser=  await User.findOne({email})
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body 
+    const loggedUser = await User.findOne({ email });
+    if (!loggedUser) {
+        return res.status(401).json({ error: 'Not Authorized' });
+    }
     const isMatch = await bcrypt.compare(password, loggedUser.password);
-    if (!loggedUser || !isMatch){
-        res.send('Not Authorized')
+    if (!isMatch){
+        return res.status(401).json({ error: 'Not Authorized' });
     }
-    else {
-        const token = jwt.sign({email:email},'test#secret')
-        res.json(token)
-    }
+    const token = jwt.sign({ email: email }, 'test#secret');
+    res.json({ token });
 })
 
-
 // initializing express app , we should use listen 
-app.listen(port,()=>{
+app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`)
 })
