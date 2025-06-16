@@ -24,10 +24,6 @@ app.post('/register', async (req, res) => {
   try {
     const { username, password, confirmpassword, email } = req.body;
 
-    if (password !== confirmpassword) {
-      return res.status(400).json({ error: 'Password and confirm password do not match.' });
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
@@ -41,7 +37,6 @@ app.post('/register', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
   }
 });
 
@@ -50,16 +45,13 @@ app.get('/user-details', async (req, res) => {
     const users = await User.find({});
     res.json(users); 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.log(err)
   }
 });
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body 
     const loggedUser = await User.findOne({ email });
-    if (!loggedUser) {
-        return res.status(401).json({ error: 'Not Authorized' });
-    }
     const isMatch = await bcrypt.compare(password, loggedUser.password);
     if (!isMatch){
         return res.status(401).json({ error: 'Not Authorized' });
