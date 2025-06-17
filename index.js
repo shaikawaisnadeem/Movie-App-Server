@@ -1,66 +1,87 @@
-// importing express
-import express from 'express'
-import middleWares from './MiddlesWares/middlewares.js'
-import mongoConnection from './MongoDB/connection.js'
-import User from './Schemas/Resgistration/Registration.js'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import checkUser from './Schemas/Login/login.js'
+import express from 'express';
+import middleWares from './MiddlesWares/middlewares.js';
+import mongoConnection from './MongoDB/connection.js';
+import User from './Schemas/Resgistration/Registration.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-// creating an express instance 
-const app = express()
-mongoConnection()
-middleWares(app)
+const app = express();
+const port = 3000;
 
-// giving a port number where our server should run 
-const port = 3000 
+// Connect DB and use middleware
+mongoConnection();
+middleWares(app);
 
-// defining a simple route 
+// Home route
 app.get('/', (req, res) => {
-    res.send('Welcome to Express Train')
-})
+  res.send('Welcome to Express Train');
+});
 
+// Register route
 app.post('/register', async (req, res) => {
   try {
     const { username, password, confirmpassword, email } = req.body;
 
+    // Check for existing user before creating a new one
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    // Hash passwords
     const hashedPassword = await bcrypt.hash(password, 10);
-    const hashedconfirmPassword = await bcrypt.hash(confirmpassword,10)
- 
+    const hashedConfirmPassword = await bcrypt.hash(confirmpassword, 10);
+
+    // Save user
     const newUser = await User.create({
       username,
       password: hashedPassword,
-      confirmpassword:hashedconfirmPassword,
+      confirmpassword: hashedConfirmPassword,
       email,
     });
 
-    console.log(newUser);
-
+    res.status(201).json({ message: 'User registered successfully', user: newUser });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
+// Get all users
 app.get('/user-details', async (req, res) => {
   try {
     const users = await User.find({});
-    res.json(users); 
+    res.json(users);
   } catch (err) {
-    console.log(err)
+    console.log(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
+// Login route
 app.post('/login', async (req, res) => {
-    const { email, password } = req.body 
-    const loggedUser = await User.findOne({ email });
-    const isMatch = await bcrypt.compare(password, loggedUser.password);
-    if (!isMatch){
-        return res.status(401).json({ error: 'Not Authorized' });
-    }
-    const token = jwt.sign({ email: email }, 'test#secret');
-})
+  try {
+    const { email, password } = req.body;
 
-// initializing express app , we should use listen 
+    const loggedUser = await User.findOne({ email });
+    if (!loggedUser) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const isMatch = await bcrypt.compare(password, loggedUser.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
+
+    const token = jwt.sign({ email: email }, 'test#secret', { expiresIn: '1h' });
+    res.status(200).json({ message: 'Login successful', token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Start server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`)
-})
+  console.log(`Server is running on http://localhost:${port}`);
+});
