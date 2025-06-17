@@ -25,7 +25,7 @@ app.post('/register', async (req, res) => {
     // Check for existing user before creating a new one
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Email already exists' });
+      return res.status(400).send({ message: 'Email already exists' });
     }
 
     // Hash passwords
@@ -40,10 +40,10 @@ app.post('/register', async (req, res) => {
       email,
     });
 
-    res.status(201).json({ message: 'User registered successfully', user: newUser });
+    res.status(201).send({ message: 'User registered successfully'});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).send({ error: 'Server error' });
   }
 });
 
@@ -54,7 +54,7 @@ app.get('/user-details', async (req, res) => {
     res.json(users);
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).send({ error: 'Server error' });
   }
 });
 
@@ -65,19 +65,19 @@ app.post('/login', async (req, res) => {
 
     const loggedUser = await User.findOne({ email });
     if (!loggedUser) {
-      return res.status(401).json({ error: 'User not found' });
+      return res.status(401).send({ error: 'User not found' });
     }
 
     const isMatch = await bcrypt.compare(password, loggedUser.password);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Incorrect password' });
+      return res.status(401).send({ error: 'Incorrect password' });
     }
 
-    const token = jwt.sign({ email: email }, 'test#secret', { expiresIn: '1h' });
-    res.status(200).json({ message: 'Login successful', token });
+    const token = jwt.sign({ email: email }, 'test#secret');
+    res.status(200).send({ message: 'Login successful'});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).send({ error: 'Server error' });
   }
 });
 
