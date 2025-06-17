@@ -25,11 +25,12 @@ app.post('/register', async (req, res) => {
     const { username, password, confirmpassword, email } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    const hashedconfirmPassword = await bcrypt.hash(confirmpassword,10)
+ 
     const newUser = await User.create({
       username,
       password: hashedPassword,
-      confirmpassword,
+      confirmpassword:hashedconfirmPassword,
       email,
     });
 
