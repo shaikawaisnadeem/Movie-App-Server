@@ -74,7 +74,7 @@ app.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign({ email: email }, 'test#secret');
-    res.status(200).send({ message: 'Login successful'});
+    res.status(200).send({ message: 'Login successful', token});
   } catch (err) {
     console.error(err);
     res.status(500).send({ error: 'Server error' });
